@@ -279,3 +279,26 @@ for i in range(0, len(f.verts)):
     v = f.verts[i]
     for j in range(i + 1, len(f.verts)):
         bmesh.utils.face_split(f, f.verts[i], f.verts[j], [], True)
+        
+        
+        
+def alignToBody(ref, obj, offset):
+    body = bpy.data.objects.get(ref)
+    sock = bpy.data.objects.get(obj)
+
+    binv = body.matrix_world.inverted()
+
+    sbm = bmesh.from_edit_mesh(sock.data)
+    #bbm = bmesh.from_edit_mesh(body.data)
+
+    for v in sbm.verts:
+        if (not v.select):
+            continue
+        print("- - - - - -")
+        local = binv * (sock.matrix_world * v.co)
+        (hit, loc, norm, face_index) = body.closest_point_on_mesh(local)
+        print(v.co)
+        bpoint = body.matrix_world * loc
+        print (bpoint)
+        v.co = sock.matrix_world.inverted() * (bpoint - (bpoint - local).normalized() * offset)
+    sbm.free()
